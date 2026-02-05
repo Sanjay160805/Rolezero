@@ -8,6 +8,7 @@ import { useExecutePayments } from '@/hooks/useExecutePayments';
 import { useExecuteExpiry } from '@/hooks/useExecuteExpiry';
 import { showToast } from '@/components/Toast/Toast';
 import { AuditTrail } from '@/components/AuditTrail/AuditTrail';
+import { SkeletonDashboard } from '@/components/Skeleton/Skeleton';
 import { format } from 'date-fns';
 import { 
   Loader2, 
@@ -45,12 +46,7 @@ export const RoleDashboardLive: React.FC = () => {
   const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   if (isLoading) {
-    return (
-      <div className="container dashboard-loading">
-        <Loader2 className="spin" size={48} />
-        <p>Loading live dashboard...</p>
-      </div>
-    );
+    return <SkeletonDashboard />;
   }
 
   if (error || !roleData) {

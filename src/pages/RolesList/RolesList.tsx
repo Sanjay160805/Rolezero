@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { Loader2, Clock, Wallet, Users, Receipt } from 'lucide-react';
 import { shortenAddress } from '@/utils/ens';
 import { Button as MovingBorderButton } from '@/components/ui/moving-border';
+import { SkeletonRolesList } from '@/components/Skeleton/Skeleton';
 import './RolesList.css';
 
 export const RolesList: React.FC = () => {
@@ -20,12 +21,7 @@ export const RolesList: React.FC = () => {
   }, [allRoles, suiAccount?.address]);
 
   if (isLoading) {
-    return (
-      <div className="container roles-list-loading">
-        <Loader2 className="spin" size={48} />
-        <p>Loading your roles...</p>
-      </div>
-    );
+    return <SkeletonRolesList />;
   }
 
   if (error) {

@@ -24,10 +24,6 @@ export const useRoleData = (roleId: string | undefined) => {
       }
 
       const fields = roleObject.data.content.fields as any;
-      
-      console.log('=== RAW BLOCKCHAIN DATA ===');
-      console.log('Full fields:', JSON.stringify(fields, null, 2));
-      console.log('Payments array:', fields.payments);
 
       // Fetch transaction history for this role
       const txBlocks = await client.queryTransactionBlocks({
@@ -104,13 +100,6 @@ export const useRoleData = (roleId: string | undefined) => {
         // Handle amount
         const amount = typeof paymentFields.amount === 'string' ? parseInt(paymentFields.amount) : (paymentFields.amount || 0);
         
-        console.log('Payment parsed:', {
-          recipient: paymentFields.recipient,
-          amount,
-          scheduledTime,
-          scheduledDate: scheduledTime > 0 ? new Date(scheduledTime).toLocaleString() : 'Invalid'
-        });
-        
         return {
           recipient: paymentFields.recipient,
           amount,
@@ -131,17 +120,12 @@ export const useRoleData = (roleId: string | undefined) => {
         executedPayments,
         fundingHistory,
       };
-      
-      console.log('Role data parsed:', {
-        id: roleId,
-        startTime: new Date(roleData.startTime),
-        expiryTime: new Date(roleData.expiryTime),
-        paymentsCount: payments.length
-      });
 
       return roleData;
     },
     enabled: !!roleId,
-    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchInterval: 5000, // Refetch every 5 seconds
+    staleTime: 2000, // Data fresh for 2 seconds
+    gcTime: 300000, // Cache for 5 minutes
   });
 };

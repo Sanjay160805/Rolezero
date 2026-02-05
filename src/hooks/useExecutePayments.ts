@@ -65,18 +65,18 @@ export const useExecutePayments = (roleId: string, roleBalance: number) => {
 
       return result;
     },
-    onSuccess: () => {
-      // Force immediate refetch to update UI
-      console.log('✅ Payment execution successful! Refreshing data...');
-      queryClient.invalidateQueries({ queryKey: ['role', roleId] });
-      queryClient.invalidateQueries({ queryKey: ['role-live-transactions', roleId] });
+    onSuccess: async () => {
+      // Immediate refetch for instant feedback
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['role', roleId] }),
+        queryClient.refetchQueries({ queryKey: ['role-live-transactions', roleId] }),
+      ]);
       
-      // Force refetch after delay to allow blockchain indexing
+      // Additional refetch after blockchain indexing delay
       setTimeout(() => {
         queryClient.refetchQueries({ queryKey: ['role', roleId] });
         queryClient.refetchQueries({ queryKey: ['role-live-transactions', roleId] });
-        console.log('🔄 Data refreshed - executed payments should now show');
-      }, 2000);
+      }, 1500);
     },
     onError: (error: any) => {
       console.error('❌ Failed to execute payments:', error);

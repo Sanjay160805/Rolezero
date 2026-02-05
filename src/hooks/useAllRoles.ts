@@ -98,6 +98,8 @@ export const useAllRoles = () => {
         return [];
       }
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 15000, // Refetch every 15 seconds
+    staleTime: 10000, // Data fresh for 10 seconds
+    gcTime: 600000, // Cache for 10 minutes
   });
 };
