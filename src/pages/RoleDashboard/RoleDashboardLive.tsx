@@ -324,10 +324,11 @@ export const RoleDashboardLive: React.FC = () => {
                 <p>No payments scheduled</p>
               </div>
             ) : (() => {
-              // Filter to show only unexecuted payments
+              // Filter to show only unexecuted payments with better matching
               const pendingPayments = roleData.payments.filter(payment => {
                 const isExecuted = roleData.executedPayments.some(
-                  ep => ep.recipient === payment.recipient && Math.abs(ep.amount - payment.amount) < 1000
+                  ep => ep.recipient.toLowerCase() === payment.recipient.toLowerCase() && 
+                       Math.abs(ep.amount - payment.amount) < 100000 // More lenient matching (0.0001 SUI tolerance)
                 );
                 return !isExecuted; // Only show payments that haven't been executed
               });
@@ -379,7 +380,8 @@ export const RoleDashboardLive: React.FC = () => {
             // Check if there are any payments ready to execute (not yet executed, time has come, role is active)
             const hasReadyPayments = roleData.payments.some(p => {
               const isExecuted = roleData.executedPayments.some(
-                ep => ep.recipient === p.recipient && Math.abs(ep.amount - p.amount) < 1000
+                ep => ep.recipient.toLowerCase() === p.recipient.toLowerCase() && 
+                     Math.abs(ep.amount - p.amount) < 100000 // More lenient matching
               );
               return !isExecuted && Date.now() >= p.scheduledTime && isActive;
             });
@@ -387,7 +389,8 @@ export const RoleDashboardLive: React.FC = () => {
             // Check if all scheduled payments have been executed
             const allPaymentsExecuted = roleData.payments.every(p => {
               return roleData.executedPayments.some(
-                ep => ep.recipient === p.recipient && Math.abs(ep.amount - p.amount) < 1000
+                ep => ep.recipient.toLowerCase() === p.recipient.toLowerCase() && 
+                     Math.abs(ep.amount - p.amount) < 100000 // More lenient matching
               );
             });
 

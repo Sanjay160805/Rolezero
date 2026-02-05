@@ -3,9 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { QRCodeSVG } from 'qrcode.react';
 import { useFundRole } from '@/hooks/useFundRole';
-import { useRoleData } from '@/hooks/useRoleData';
 import { showToast } from '@/components/Toast/Toast';
-import { Loader2, CheckCircle, Wallet, ArrowLeftRight, ExternalLink } from 'lucide-react';
+import { Loader2, CheckCircle, Wallet, ArrowLeftRight, ExternalLink, ArrowLeft } from 'lucide-react';
 import { Button as MovingBorderButton } from '@/components/ui/moving-border';
 import './SponsorPayment.css';
 
@@ -14,7 +13,6 @@ export const SponsorPayment: React.FC = () => {
   const navigate = useNavigate();
   const account = useCurrentAccount();
   const { fundRole } = useFundRole();
-  const { data: roleData } = useRoleData(roleId);
 
   const [amount, setAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -310,29 +308,18 @@ export const SponsorPayment: React.FC = () => {
         </div>
       </div>
 
-      {roleData && (
-        <div className="card role-summary">
-          <h3>Role Summary</h3>
-          <div className="summary-grid">
-            <div className="summary-item">
-              <span className="label">Total Funded:</span>
-              <span className="value">
-                {(roleData.totalFunded / 1_000_000_000).toFixed(2)} SUI
-              </span>
-            </div>
-            <div className="summary-item">
-              <span className="label">Remaining Balance:</span>
-              <span className="value">
-                {(roleData.remainingBalance / 1_000_000_000).toFixed(2)} SUI
-              </span>
-            </div>
-            <div className="summary-item">
-              <span className="label">Scheduled Payments:</span>
-              <span className="value">{roleData.payments.length}</span>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="card info-box" style={{marginTop: '2rem'}}>
+        <h4>💡 Sponsor Information</h4>
+        <p>You are sponsoring a payroll role. Your contribution will help fund scheduled payments.</p>
+        <p>After funding, you can close this page. The role owner will manage the payment execution.</p>
+        <button 
+          onClick={() => navigate('/')}
+          className="btn btn-secondary"
+          style={{marginTop: '1rem'}}
+        >
+          <ArrowLeft size={18} /> Back to Home
+        </button>
+      </div>
     </div>
   );
 };
