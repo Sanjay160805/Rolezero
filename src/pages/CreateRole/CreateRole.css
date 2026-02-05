@@ -164,6 +164,42 @@
   font-weight: 500;
 }
 
+.token-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.token-select:hover {
+  border-color: var(--rose-gold);
+}
+
+.token-select:focus {
+  outline: none;
+  border-color: var(--rose-gold);
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.1);
+}
+
+.token-select option {
+  padding: 0.5rem;
+  font-weight: 500;
+}
+
+.help-text {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
 @media (max-width: 768px) {
   .payment-fields {
     grid-template-columns: 1fr;

@@ -16,6 +16,7 @@ interface PaymentInput {
   scheduledTime: string;
   resolvedAddress?: string;
   ensName?: string;
+  token?: 'SUI' | 'USDC';
 }
 
 export const CreateRole: React.FC = () => {
@@ -27,8 +28,9 @@ export const CreateRole: React.FC = () => {
   const [startTime, setStartTime] = useState('');
   const [expiryTime, setExpiryTime] = useState('');
   const [leftoverRecipient, setLeftoverRecipient] = useState('');
+  const [roleToken, setRoleToken] = useState<'SUI' | 'USDC'>('SUI'); // Default token
   const [payments, setPayments] = useState<PaymentInput[]>([
-    { id: 1, recipient: '', amount: '', scheduledTime: '' },
+    { id: 1, recipient: '', amount: '', scheduledTime: '', token: 'SUI' },
   ]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,7 +47,7 @@ export const CreateRole: React.FC = () => {
   const addPayment = () => {
     setPayments([
       ...payments,
-      { id: Date.now(), recipient: '', amount: '', scheduledTime: '' },
+      { id: Date.now(), recipient: '', amount: '', scheduledTime: '', token: roleToken },
     ]);
   };
 
@@ -94,7 +96,7 @@ export const CreateRole: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label>Amount (SUI)</label>
+            <label>Amount ({payment.token || roleToken})</label>
             <input
               type="number"
               placeholder="100"
@@ -102,6 +104,18 @@ export const CreateRole: React.FC = () => {
               value={payment.amount}
               onChange={(e) => updatePayment(payment.id, 'amount', e.target.value)}
             />
+          </div>
+
+          <div className="form-group">
+            <label>Token</label>
+            <select
+              value={payment.token || roleToken}
+              onChange={(e) => updatePayment(payment.id, 'token', e.target.value as 'SUI' | 'USDC')}
+              className="token-select"
+            >
+              <option value="SUI">💎 SUI (Native)</option>
+              <option value="USDC">💵 USDC (Stablecoin)</option>
+            </select>
           </div>
 
           <div className="form-group">
@@ -354,6 +368,23 @@ export const CreateRole: React.FC = () => {
               onChange={(e) => setRoleName(e.target.value)}
               required
             />
+          </div>
+
+          <div className="form-group">
+            <label>Default Payment Token *</label>
+            <select
+              value={roleToken}
+              onChange={(e) => setRoleToken(e.target.value as 'SUI' | 'USDC')}
+              className="token-select"
+            >
+              <option value="SUI">💎 SUI (Native Token)</option>
+              <option value="USDC">💵 USDC (USD Stablecoin)</option>
+            </select>
+            <small className="help-text">
+              {roleToken === 'USDC' 
+                ? '🏆 Arc-compatible: USDC enables multi-chain payroll capabilities' 
+                : 'Native Sui token for fast, low-fee payments'}
+            </small>
           </div>
 
           <div className="form-row">

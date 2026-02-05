@@ -66,6 +66,19 @@
   font-size: 0.875rem;
 }
 
+.token-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(251, 191, 36, 0.1) 100%);
+  color: #eab308;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .header-actions {
   display: flex;
   gap: 1rem;

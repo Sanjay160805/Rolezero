@@ -25,6 +25,7 @@ import {
   Play
 } from 'lucide-react';
 import { shortenAddress } from '@/utils/ens';
+import { formatTokenAmount, getTokenIcon } from '@/utils/token';
 import { Button as MovingBorderButton } from '@/components/ui/moving-border';
 import './RoleDashboardLive.css';
 
@@ -175,13 +176,11 @@ export const RoleDashboardLive: React.FC = () => {
               {isActive ? '🟢 Active' : isExpired ? '🔴 Expired' : '🟡 Pending'}
             </span>
             <span className="role-id">ID: {shortenAddress(roleId || '', 6)}</span>
-          </div>
-        </div>
-
-        <div className="header-actions">
-          <MovingBorderButton
-            borderRadius="1.5rem"
-            onClick={() => {
+            {roleData.token && (
+              <span className="token-badge">
+                {getTokenIcon(roleData.token)} {roleData.token}
+              </span>
+            )}
               const sponsorUrl = `${window.location.origin}/sponsor/${roleId}`;
               navigator.clipboard.writeText(sponsorUrl);
               alert('✅ Sponsor link copied to clipboard!\n\nShare this link with sponsors:\n' + sponsorUrl);
