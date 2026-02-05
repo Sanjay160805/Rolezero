@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCurrentAccount } from '@mysten/dapp-kit';
+import { useQueryClient } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
 import { useFundRole } from '@/hooks/useFundRole';
 import { showToast } from '@/components/Toast/Toast';
@@ -13,6 +14,7 @@ export const SponsorPayment: React.FC = () => {
   const navigate = useNavigate();
   const account = useCurrentAccount();
   const { fundRole } = useFundRole();
+  const queryClient = useQueryClient();
 
   const [amount, setAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,6 +67,14 @@ export const SponsorPayment: React.FC = () => {
       setTxSuccess(result.digest);
       setSuccessAmount(amount);
       setShowSuccessModal(true); // Show modal
+      
+      // Invalidate all role-related queries to update the developer's dashboard
+      console.log('🔄 Invalidating queries to update dashboard...');
+      await queryClient.invalidateQueries({ queryKey: ['roleData'] });
+      await queryClient.invalidateQueries({ queryKey: ['liveTransactions'] });
+      await queryClient.invalidateQueries({ queryKey: ['allRoles'] });
+      console.log('✅ Dashboard data updated!');
+      
       setAmount(''); // Clear input
       showToast({
         type: 'success',
@@ -382,9 +392,7 @@ export const SponsorPayment: React.FC = () => {
       {SuccessBanner}
 
       <h1>Sponsor Role Payment</h1>
-      {roleData && (
-        <p className="subtitle">Support "{roleData.name}" with your contribution</p>
-      )}
+      <p className="subtitle">Support this role with your contribution</p>
 
       <div className="sponsor-grid">
         {/* QR Code Section */}
