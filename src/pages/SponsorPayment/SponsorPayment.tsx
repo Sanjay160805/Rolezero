@@ -19,6 +19,8 @@ export const SponsorPayment: React.FC = () => {
   const [txSuccess, setTxSuccess] = useState<string | null>(null);
   const [pendingPayment, setPendingPayment] = useState(false);
   const [waitingForWallet, setWaitingForWallet] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successAmount, setSuccessAmount] = useState('');
 
   // Auto-execute payment when wallet connects
   React.useEffect(() => {
@@ -61,6 +63,9 @@ export const SponsorPayment: React.FC = () => {
       const result = await fundRole(roleId, amountMist);
       console.log('✅ Payment successful!', result.digest);
       setTxSuccess(result.digest);
+      setSuccessAmount(amount);
+      setShowSuccessModal(true); // Show modal
+      setAmount(''); // Clear input
       showToast({
         type: 'success',
         title: 'Payment Successful!',
@@ -115,6 +120,201 @@ export const SponsorPayment: React.FC = () => {
     await executePayment();
   };
 
+  // Success Modal
+  const SuccessModal = showSuccessModal ? (
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.8)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        animation: 'fadeIn 0.3s ease-in'
+      }}
+      onClick={() => setShowSuccessModal(false)}
+    >
+      <div 
+        style={{
+          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+          border: '2px solid #10b981',
+          borderRadius: '1.5rem',
+          padding: '3rem',
+          maxWidth: '500px',
+          width: '90%',
+          textAlign: 'center',
+          animation: 'slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: '0 20px 60px rgba(16, 185, 129, 0.3)'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Large Success Checkmark */}
+        <div style={{
+          width: '120px',
+          height: '120px',
+          margin: '0 auto 2rem',
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          animation: 'scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          boxShadow: '0 10px 40px rgba(16, 185, 129, 0.4)'
+        }}>
+          <CheckCircle size={80} style={{color: 'white'}} strokeWidth={3} />
+        </div>
+
+        <h2 style={{
+          fontSize: '2rem',
+          fontWeight: 'bold',
+          color: '#10b981',
+          marginBottom: '1rem'
+        }}>
+          Payment Successful! ✅
+        </h2>
+
+        <p style={{
+          fontSize: '1.25rem',
+          marginBottom: '0.5rem',
+          color: 'var(--text-primary)'
+        }}>
+          <strong>{successAmount} SUI</strong> funded successfully
+        </p>
+
+        <p style={{
+          fontSize: '0.875rem',
+          color: 'var(--text-secondary)',
+          marginBottom: '1.5rem'
+        }}>
+          Transaction confirmed on Sui blockchain
+        </p>
+
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.1)',
+          border: '1px solid rgba(16, 185, 129, 0.3)',
+          borderRadius: '0.75rem',
+          padding: '1rem',
+          marginBottom: '2rem',
+          textAlign: 'left'
+        }}>
+          <p style={{fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '0.25rem'}}>
+            Transaction ID:
+          </p>
+          <code style={{
+            fontSize: '0.75rem',
+            wordBreak: 'break-all',
+            color: '#10b981'
+          }}>
+            {txSuccess}
+          </code>
+        </div>
+
+        <div style={{display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap'}}>
+          <MovingBorderButton
+            onClick={() => {
+              setShowSuccessModal(false);
+              navigate(`/role/${roleId}/live`);
+            }}
+            borderRadius="0.75rem"
+            className="btn btn-primary"
+            containerClassName="h-12"
+          >
+            View Dashboard
+          </MovingBorderButton>
+
+          <button
+            onClick={() => setShowSuccessModal(false)}
+            style={{
+              padding: '0.75rem 1.5rem',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '2px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '0.75rem',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: 600,
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            }}
+          >
+            Fund More
+          </button>
+
+          <a
+            href={`https://suiscan.xyz/testnet/tx/${txSuccess}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: '0.75rem 1.5rem',
+              background: 'transparent',
+              border: '2px solid #10b981',
+              borderRadius: '0.75rem',
+              color: '#10b981',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: 600,
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+          >
+            <ExternalLink size={16} />
+            View on Explorer
+          </a>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.5);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
+    </div>
+  ) : null;
+
   // Success message shown, but don't block the page
   const SuccessBanner = txSuccess ? (
     <div style={{
@@ -167,6 +367,8 @@ export const SponsorPayment: React.FC = () => {
 
   return (
     <div className="container sponsor-page">
+      {SuccessModal}
+      
       <div className="page-header">
         <MovingBorderButton
           onClick={() => navigate(`/role/${roleId}/live`)}

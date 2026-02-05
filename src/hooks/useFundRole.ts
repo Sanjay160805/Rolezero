@@ -1,9 +1,10 @@
 import { Transaction } from '@mysten/sui/transactions';
-import { useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+import { useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit';
 import { SUI_PACKAGE_ID } from '@/config/sui';
 
 export const useFundRole = () => {
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
+  const client = useSuiClient();
 
   const fundRole = async (roleId: string, amount: number) => {
     const tx = new Transaction();
@@ -25,6 +26,18 @@ export const useFundRole = () => {
 
     const result = await signAndExecute({
       transaction: tx,
+      options: {
+        showEffects: true,
+        showEvents: true,
+      },
+    });
+
+    // Wait for transaction confirmation
+    await client.waitForTransaction({
+      digest: result.digest,
+      options: {
+        showEffects: true,
+      },
     });
 
     return {
