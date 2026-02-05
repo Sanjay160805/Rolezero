@@ -1,0 +1,363 @@
+.dashboard-page {
+  padding: 2rem 0;
+}
+
+.dashboard-loading,
+.dashboard-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+  margin-bottom: 0.5rem;
+}
+
+.role-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22C55E;
+}
+
+.status-badge.expired {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+}
+
+.status-badge.pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #F59E0B;
+}
+
+.role-id {
+  color: var(--text-tertiary);
+  font-family: monospace;
+  font-size: 0.875rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  padding: 1.5rem;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-sublabel {
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.dashboard-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.sponsors-card,
+.timeline-card,
+.scheduled-payments-card {
+  padding: 1.5rem;
+}
+
+.sponsors-card h3,
+.timeline-card h3,
+.scheduled-payments-card h3 {
+  margin-bottom: 1.5rem;
+}
+
+.sponsors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sponsor-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--bg-hover);
+  border-radius: 0.5rem;
+  gap: 1rem;
+}
+
+.sponsor-item .sponsor-info {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  flex: 1;
+}
+
+.sponsor-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.sponsor-amount {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.sponsor-count {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 1rem;
+}
+
+.timeline-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.timeline-icon.funding {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22C55E;
+}
+
+.timeline-icon.payment {
+  background: rgba(183, 110, 121, 0.2);
+  color: var(--primary);
+}
+
+.timeline-content {
+  flex: 1;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.timeline-item:last-child .timeline-content {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-type {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.timeline-time {
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+}
+
+.timeline-amount {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-amount.funding {
+  color: #22C55E;
+}
+
+.timeline-amount.payment {
+  color: var(--primary);
+}
+
+.timeline-recipient {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--primary);
+  font-size: 0.875rem;
+  text-decoration: none;
+  margin-top: 0.5rem;
+}
+
+.timeline-link:hover {
+  text-decoration: underline;
+}
+
+.sponsor-info {
+  background: var(--bg-hover);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.sponsor-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.defi-profile {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.defi-badge {
+  display: inline-flex;
+  align-items: center;
+  background: var(--primary);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.defi-field {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.defi-field .label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.defi-field .value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.payments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.payment-item {
+  padding: 1rem;
+  background: var(--bg-hover);
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.payment-item.executed {
+  opacity: 0.6;
+}
+
+.payment-info {
+  flex: 1;
+}
+
+.payment-recipient {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.payment-time {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.payment-amount {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.executed-badge {
+  color: #22C55E;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 968px) {
+  .dashboard-content {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
