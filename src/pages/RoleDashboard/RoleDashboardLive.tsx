@@ -181,6 +181,13 @@ export const RoleDashboardLive: React.FC = () => {
                 {getTokenIcon(roleData.token)} {roleData.token}
               </span>
             )}
+          </div>
+        </div>
+
+        <div className="header-actions">
+          <MovingBorderButton
+            borderRadius="1.5rem"
+            onClick={() => {
               const sponsorUrl = `${window.location.origin}/sponsor/${roleId}`;
               navigator.clipboard.writeText(sponsorUrl);
               alert('✅ Sponsor link copied to clipboard!\n\nShare this link with sponsors:\n' + sponsorUrl);
