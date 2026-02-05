@@ -70,9 +70,12 @@ export const SponsorPayment: React.FC = () => {
       
       // Invalidate all role-related queries to update the developer's dashboard
       console.log('🔄 Invalidating queries to update dashboard...');
-      await queryClient.invalidateQueries({ queryKey: ['roleData'] });
-      await queryClient.invalidateQueries({ queryKey: ['liveTransactions'] });
+      await queryClient.invalidateQueries({ queryKey: ['role', roleId] });
+      await queryClient.invalidateQueries({ queryKey: ['role-live-transactions', roleId] });
       await queryClient.invalidateQueries({ queryKey: ['allRoles'] });
+      // Refetch immediately to ensure fresh data
+      await queryClient.refetchQueries({ queryKey: ['role', roleId] });
+      await queryClient.refetchQueries({ queryKey: ['role-live-transactions', roleId] });
       console.log('✅ Dashboard data updated!');
       
       setAmount(''); // Clear input
