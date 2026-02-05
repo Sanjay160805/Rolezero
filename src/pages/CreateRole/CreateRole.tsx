@@ -4,7 +4,9 @@ import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useCreateRole } from '@/hooks/useCreateRole';
 import { useResolveEnsName } from '@/hooks/useResolveEnsName';
 import { DEVELOPER_FEE_PERCENT } from '@/config/sui';
+import { ChainType } from '@/config/arc';
 import { showToast } from '@/components/Toast/Toast';
+import { ChainSelector } from '@/components/ChainSelector/ChainSelector';
 import { Plus, X, Loader2, CheckCircle } from 'lucide-react';
 import { Button as MovingBorderButton } from '@/components/ui/moving-border';
 import './CreateRole.css';
@@ -29,6 +31,7 @@ export const CreateRole: React.FC = () => {
   const [expiryTime, setExpiryTime] = useState('');
   const [leftoverRecipient, setLeftoverRecipient] = useState('');
   const [roleToken, setRoleToken] = useState<'SUI' | 'USDC'>('SUI'); // Default token
+  const [selectedChain, setSelectedChain] = useState<ChainType>('SUI'); // Default chain
   const [payments, setPayments] = useState<PaymentInput[]>([
     { id: 1, recipient: '', amount: '', scheduledTime: '', token: 'SUI' },
   ]);
@@ -356,6 +359,15 @@ export const CreateRole: React.FC = () => {
       <p className="subtitle">Set up an autonomous payment role on Sui blockchain</p>
 
       <form onSubmit={handleSubmit} className="create-role-form">
+        <div className="card">
+          <h3>Deployment Configuration</h3>
+          
+          <ChainSelector
+            selectedChain={selectedChain}
+            onChange={setSelectedChain}
+          />
+        </div>
+
         <div className="card">
           <h3>Role Details</h3>
           
