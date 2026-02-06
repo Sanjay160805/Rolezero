@@ -14,7 +14,7 @@ import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { Transaction } from '@mysten/sui/transactions';
 
 // Configuration
-const PACKAGE_ID = '0x3848f7a7c63477c1f899624f937551a3b52b3eaee738efe768f416c572b45c68';
+const PACKAGE_ID = '0x7ac81f31d2233146edc08023c0c26533ac29687f41e594bd9ec46a4c28bcb356';
 const CLOCK_OBJECT_ID = '0x0000000000000000000000000000000000000000000000000000000000000006';
 const NETWORK = 'testnet';
 const CHECK_INTERVAL = 2 * 60 * 1000; // 2 minutes (faster execution)
@@ -37,7 +37,22 @@ if (!privateKey) {
   process.exit(1);
 }
 
-const keypair = Ed25519Keypair.fromSecretKey(privateKey);
+// Parse the private key correctly
+let keypair;
+try {
+  // The private key from generate-bot-wallet.js is in the correct format
+  // It should be a string starting with 'suiprivkey'
+  keypair = Ed25519Keypair.fromSecretKey(privateKey);
+} catch (error) {
+  console.error('❌ Error parsing private key:', error.message);
+  console.log('\n💡 Troubleshooting:');
+  console.log('1. Make sure you copied the FULL private key from generate-bot-wallet.js');
+  console.log('2. The key should start with "suiprivkey1"');
+  console.log('3. Run: node generate-bot-wallet.js to generate a new one');
+  console.log('4. Then: $env:SUI_PRIVATE_KEY="paste_full_key_here"');
+  process.exit(1);
+}
+
 const botAddress = keypair.getPublicKey().toSuiAddress();
 
 console.log('🤖 Payment Execution Bot Started');

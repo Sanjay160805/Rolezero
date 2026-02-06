@@ -17,6 +17,9 @@ export const useLiveTransactions = (roleId: string | undefined) => {
 
   return useQuery({
     queryKey: ['role-live-transactions', roleId],
+    enabled: !!roleId && !!client,
+    retry: 1,
+    staleTime: 30000,
     queryFn: async () => {
       if (!roleId) return [];
 

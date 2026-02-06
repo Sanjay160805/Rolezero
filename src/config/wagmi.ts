@@ -8,7 +8,13 @@ export const wagmiConfig = createConfig({
     injected(),
   ],
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
+    [mainnet.id]: http('https://eth.llamarpc.com', {
+      timeout: 5000,
+      retryCount: 1,
+    }),
+    [sepolia.id]: http('https://ethereum-sepolia-rpc.publicnode.com', {
+      timeout: 5000,
+      retryCount: 1,
+    }),
   },
 });

@@ -406,8 +406,17 @@ export const CreateRole: React.FC = () => {
           <div className="button-group">
             <MovingBorderButton
               onClick={() => {
-                if (txResult.roleId) {
+                console.log('🔍 View Dashboard clicked. txResult:', txResult);
+                if (txResult?.roleId) {
+                  console.log('✅ Navigating to:', `/role/${txResult.roleId}/live`);
                   navigate(`/role/${txResult.roleId}/live`);
+                } else {
+                  console.error('❌ No roleId found in txResult:', txResult);
+                  showToast({
+                    type: 'error',
+                    title: 'Cannot Open Dashboard',
+                    message: 'Role ID not found. Check browser console for transaction details.',
+                  });
                 }
               }}
               borderRadius="0.75rem"

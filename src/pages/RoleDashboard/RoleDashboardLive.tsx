@@ -10,7 +10,7 @@ import { useAutoPaymentMonitor } from '@/hooks/useAutoPaymentMonitor';
 import { showToast } from '@/components/Toast/Toast';
 import { AuditTrail } from '@/components/AuditTrail/AuditTrail';
 import { SkeletonDashboard } from '@/components/Skeleton/Skeleton';
-import { format } from 'date-fns';
+import { formatDate, formatTime, formatDateTime, safeFormatDate } from '@/utils/date';
 import { 
   Loader2, 
   ArrowUpRight, 
@@ -188,7 +188,7 @@ export const RoleDashboardLive: React.FC = () => {
       showToast({
         type: 'success',
         title: 'Expiry Extended!',
-        message: `Expiry time updated to ${format(newExpiry, 'MMM d, yyyy HH:mm')}`,
+        message: `Expiry time updated to ${safeFormatDate(newExpiry, 'MMM d, yyyy HH:mm')}`,
         txDigest: result.digest,
       });
       setNewExpiryDate('');
@@ -347,8 +347,8 @@ export const RoleDashboardLive: React.FC = () => {
           </div>
           <div className="stat-content">
             <div className="stat-label">Expires</div>
-            <div className="stat-value">{format(roleData.expiryTime, 'MMM d, yyyy')}</div>
-            <div className="stat-sublabel">{format(roleData.expiryTime, 'HH:mm:ss')}</div>
+            <div className="stat-value">{formatDate(roleData.expiryTime)}</div>
+            <div className="stat-sublabel">{formatTime(roleData.expiryTime)}</div>
           </div>
         </div>
       </div>
@@ -471,7 +471,7 @@ export const RoleDashboardLive: React.FC = () => {
                         {shortenAddress(payment.recipient)}
                       </div>
                       <div className="payment-time">
-                        📅 {format(scheduledDate, 'MMM d, yyyy HH:mm:ss')}
+                        📅 {safeFormatDate(scheduledDate, 'MMM d, yyyy HH:mm:ss')}
                       </div>
                     </div>
                     
@@ -579,7 +579,7 @@ export const RoleDashboardLive: React.FC = () => {
                           Automatic Payments Paused
                         </h3>
                         <p style={{margin: 0, fontSize: '0.875rem', opacity: 0.9}}>
-                          Enable auto-execution to automatically send payments when ready
+                          Monitor payment status - Execution handled by payment-bot.js automatically
                         </p>
                       </div>
                     </>
@@ -607,7 +607,7 @@ export const RoleDashboardLive: React.FC = () => {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  {autoExecuteEnabled ? '⏸️ Pause' : '▶️ Enable'} Auto-Execute
+                  {autoExecuteEnabled ? '⏸️ Pause' : '▶️ Enable'} Payment Monitor
                 </button>
               </div>
 
@@ -651,7 +651,7 @@ export const RoleDashboardLive: React.FC = () => {
                     <div>
                       <div style={{fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem'}}>Last Checked</div>
                       <div style={{fontSize: '1rem', fontWeight: '600', color: '#a78bfa'}}>
-                        {format(lastCheck, 'HH:mm:ss')}
+                        {safeFormatDate(lastCheck, 'HH:mm:ss')}
                       </div>
                     </div>
                   )}
@@ -755,7 +755,7 @@ export const RoleDashboardLive: React.FC = () => {
                       <div key={i} style={{marginBottom: '0.5rem', padding: '0.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '0.25rem'}}>
                         <div>Payment #{i + 1}: {(p.amount / 1_000_000_000).toFixed(4)} SUI → {shortenAddress(p.recipient, 8)}</div>
                         <div style={{fontSize: '0.7rem', marginTop: '0.25rem'}}>
-                          • Scheduled: {format(p.scheduledTime, 'MMM d, HH:mm:ss')}<br/>
+                          • Scheduled: {safeFormatDate(p.scheduledTime, 'MMM d, HH:mm:ss')}<br/>
                           • Time Ready: <strong style={{color: isReady ? '#10b981' : '#ef4444'}}>{isReady ? '✅ YES' : '❌ NO'}</strong><br/>
                           • On-chain Executed: <strong style={{color: p.executed ? '#10b981' : '#94a3b8'}}>{p.executed ? '✅ YES' : '➖ N/A'}</strong><br/>
                           • Executed (Event): <strong style={{color: isExecuted ? '#10b981' : '#ef4444'}}>{isExecuted ? '✅ YES' : '❌ NO'}</strong><br/>
@@ -798,7 +798,7 @@ export const RoleDashboardLive: React.FC = () => {
                         {shortenAddress(payment.recipient)}
                       </div>
                       <div className="payment-time">
-                        ✅ Executed: {format(executedDate, 'MMM d, yyyy HH:mm:ss')}
+                        ✅ Executed: {safeFormatDate(executedDate, 'MMM d, yyyy HH:mm:ss')}
                       </div>
                     </div>
                     
@@ -887,7 +887,7 @@ export const RoleDashboardLive: React.FC = () => {
                         </span>
                       )}
                       <span className="tx-time">
-                        {format(tx.timestamp, 'HH:mm:ss')}
+                        {formatTime(tx.timestamp)}
                       </span>
                     </div>
 
@@ -982,7 +982,7 @@ export const RoleDashboardLive: React.FC = () => {
             <div className="current-expiry">
               <label>Current Expiry:</label>
               <div className="expiry-value">
-                {format(roleData.expiryTime, 'PPP p')}
+                {safeFormatDate(roleData.expiryTime, 'PPP p', 'Not set')}
               </div>
               <div className={`expiry-status ${isExpired ? 'expired' : isActive ? 'active' : 'upcoming'}`} style={{marginTop: '0.5rem', fontSize: '0.9rem', fontWeight: 600}}>
                 {isExpired ? '❌ Expired' : isActive ? '✅ Active' : '⏳ Not Started'}
@@ -996,7 +996,7 @@ export const RoleDashboardLive: React.FC = () => {
                 id="newExpiry"
                 value={newExpiryDate}
                 onChange={(e) => setNewExpiryDate(e.target.value)}
-                min={format(roleData.expiryTime, "yyyy-MM-dd'T'HH:mm")}
+                min={safeFormatDate(roleData.expiryTime, "yyyy-MM-dd'T'HH:mm", '')}
                 className="datetime-input"
               />
             </div>
@@ -1081,7 +1081,7 @@ export const RoleDashboardLive: React.FC = () => {
               <div>Is Creator: {isCreator ? '✅ Yes' : '❌ No'}</div>
               <div>Is Active: {isActive ? '✅ Yes' : '❌ No'}</div>
               <div>Is Expired: {isExpired ? '✅ Yes' : '❌ No'}</div>
-              <div>Current Time: {format(Date.now(), 'PPP p')}</div>
+              <div>Current Time: {safeFormatDate(Date.now(), 'PPP p')}</div>
             </div>
 
             <div>
@@ -1127,7 +1127,7 @@ export const RoleDashboardLive: React.FC = () => {
                   <div>Payment #{i+1}:</div>
                   <div>Recipient: {shortenAddress(p.recipient, 8)}</div>
                   <div>Amount: {(p.amount / 1_000_000_000).toFixed(4)} SUI</div>
-                  <div>Scheduled: {format(p.scheduledTime, 'PPP p')}</div>
+                  <div>Scheduled: {safeFormatDate(p.scheduledTime, 'PPP p')}</div>
                   <div>Status: {executed ? '⚪ Executed' : ready ? '🟢 Ready' : '🟡 Scheduled'}</div>
                   <div>Your Wallet Matches: {suiAccount?.address === p.recipient ? '✅ Yes' : '❌ No'}</div>
                 </div>

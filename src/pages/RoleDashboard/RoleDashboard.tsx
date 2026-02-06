@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useRoleData } from '@/hooks/useRoleData';
 import { useReverseEns } from '@/hooks/useReverseEns';
 import { useEnsDeFiProfile } from '@/hooks/useEnsDeFiProfile';
-import { format } from 'date-fns';
+import { formatDate, formatTime, formatDateTime, safeFormatDate } from '@/utils/date';
 import { Loader2, ArrowUpRight, ArrowDownRight, Clock, Wallet, ExternalLink } from 'lucide-react';
 import { shortenAddress } from '@/utils/ens';
 import { Button as MovingBorderButton } from '@/components/ui/moving-border';
@@ -158,9 +158,9 @@ export const RoleDashboard: React.FC = () => {
           <div className="stat-label">Expiry Time</div>
           <div className="stat-value">
             <Clock size={20} />
-            {format(roleData.expiryTime, 'MMM d, yyyy')}
+            {formatDate(roleData.expiryTime)}
           </div>
-          <div className="stat-sublabel">{format(roleData.expiryTime, 'HH:mm')}</div>
+          <div className="stat-sublabel">{formatTime(roleData.expiryTime)}</div>
         </div>
       </div>
 
@@ -231,7 +231,7 @@ export const RoleDashboard: React.FC = () => {
                         {event.type === 'funding' ? 'Received Funding' : 'Payment Executed'}
                       </span>
                       <span className="timeline-time">
-                        {format(event.timestamp, 'MMM d, yyyy HH:mm')}
+                        {formatDateTime(event.timestamp)}
                       </span>
                     </div>
 
@@ -284,7 +284,7 @@ export const RoleDashboard: React.FC = () => {
                       {payment.ensName || shortenAddress(payment.recipient)}
                     </div>
                     <div className="payment-time">
-                      {format(payment.scheduledTime, 'MMM d, yyyy HH:mm')}
+                      {formatDateTime(payment.scheduledTime)}
                     </div>
                   </div>
                   

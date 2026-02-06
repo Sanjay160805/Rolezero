@@ -63,41 +63,55 @@ export const useCreateRole = () => {
       },
     });
 
+    console.log('🔍 Full transaction response:', txResponse);
+
     // Try to extract Role object ID from created objects
     let roleId: string | null = null;
 
     // Method 1: Try from objectChanges (preferred)
     if (txResponse.objectChanges) {
+      console.log('🔍 Method 1: Checking objectChanges:', txResponse.objectChanges);
       const createdRole = txResponse.objectChanges.find((change: any) => 
         change.type === 'created' && 
         change.objectType?.includes('::role::Role')
       );
       if (createdRole && 'objectId' in createdRole) {
         roleId = (createdRole as any).objectId;
+        console.log('✅ Method 1 SUCCESS: Found roleId:', roleId);
       }
     }
 
     // Method 2: Try from effects.created
     if (!roleId && txResponse.effects?.created) {
+      console.log('🔍 Method 2: Checking effects.created:', txResponse.effects.created);
       const createdObjects = txResponse.effects.created;
       const roleObject = createdObjects.find((obj: any) => 
         obj.owner && typeof obj.owner === 'object' && 'Shared' in obj.owner
       );
       if (roleObject) {
         roleId = roleObject.reference?.objectId;
+        console.log('✅ Method 2 SUCCESS: Found roleId:', roleId);
       }
     }
 
     // Method 3: Try from events
     if (!roleId && txResponse.events) {
+      console.log('🔍 Method 3: Checking events:', txResponse.events);
       const roleCreatedEvent = txResponse.events.find((event: any) => 
         event.type.includes('::role::RoleCreated')
       );
       if (roleCreatedEvent && roleCreatedEvent.parsedJson) {
         const parsedJson = roleCreatedEvent.parsedJson as any;
         roleId = parsedJson.role_id || null;
+        console.log('✅ Method 3 SUCCESS: Found roleId:', roleId);
       }
     }
+
+    if (!roleId) {
+      console.error('❌ WARNING: Could not extract roleId from transaction. Check console logs above.');
+    }
+
+    console.log('📦 Final result:', { digest: result.digest, roleId });
 
     return {
       digest: result.digest,

@@ -19,6 +19,9 @@ export const useAllRoles = () => {
 
   return useQuery({
     queryKey: ['allRoles'],
+    enabled: !!client,
+    retry: 1,
+    staleTime: 60000,
     queryFn: async () => {
       try {
         // Get all objects of Role type

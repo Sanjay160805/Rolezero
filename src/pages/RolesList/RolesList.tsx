@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useAllRoles } from '@/hooks/useAllRoles';
-import { format } from 'date-fns';
+import { formatDate } from '@/utils/date';
 import { Loader2, Clock, Wallet, Users, Receipt } from 'lucide-react';
 import { shortenAddress } from '@/utils/ens';
 import { Button as MovingBorderButton } from '@/components/ui/moving-border';
@@ -125,7 +125,7 @@ export const RolesList: React.FC = () => {
                 <div className="role-card-footer">
                   <div className="expiry-info">
                     <Clock size={14} />
-                    <span>Expires {format(role.expiryTime, 'MMM d, yyyy')}</span>
+                    <span>Expires {formatDate(role.expiryTime)}</span>
                   </div>
                   <div className="balance-info">
                     {(role.remainingBalance / 1_000_000_000).toFixed(2)} SUI remaining

@@ -5,7 +5,7 @@ import { useUserStats } from '@/hooks/useUserStats';
 import { shortenAddress } from '@/utils/ens';
 import { Button as MovingBorderButton } from '@/components/ui/moving-border';
 import { LetterSwapForward } from '@/components/ui/letter-swap';
-import { format } from 'date-fns';
+import { formatDate, formatDateTime } from '@/utils/date';
 import { 
   Loader2, 
   TrendingUp, 
@@ -194,7 +194,7 @@ export const UserProfile: React.FC = () => {
                   </div>
 
                   <div className="request-footer">
-                    <span>Expires: {format(new Date(request.expiryTime), 'MMM dd, yyyy')}</span>
+                    <span>Expires: {formatDate(request.expiryTime)}</span>
                     <span 
                       className="view-link"
                       onClick={() => navigate(`/role/${request.roleId}`)}
@@ -232,7 +232,7 @@ export const UserProfile: React.FC = () => {
                         <div>
                           <h4>{obligation.roleName}</h4>
                           <span className="obligation-date">
-                            {format(new Date(obligation.scheduledTime), 'MMM dd, yyyy HH:mm')}
+                            {formatDateTime(obligation.scheduledTime)}
                           </span>
                         </div>
                       </div>
@@ -330,7 +330,7 @@ export const UserProfile: React.FC = () => {
                   </div>
                   <div className="transaction-details">
                     <span className="transaction-date">
-                      {format(new Date(transaction.timestamp), 'MMM dd, yyyy HH:mm:ss')}
+                      {formatDateTime(transaction.timestamp)}
                     </span>
                   </div>
                   <div className="transaction-addresses">

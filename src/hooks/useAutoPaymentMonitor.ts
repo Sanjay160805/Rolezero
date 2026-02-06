@@ -36,7 +36,7 @@ export const useAutoPaymentMonitor = (
       return;
     }
 
-    console.log('🤖 AUTO-PAYMENT MONITOR: Started');
+    console.log('🤖 PAYMENT MONITOR: Started (display-only - bot executes)');
     setStatus(prev => ({ ...prev, isMonitoring: true }));
 
     const checkAndExecute = async () => {
@@ -76,60 +76,35 @@ export const useAutoPaymentMonitor = (
         nextPaymentTime,
       }));
 
-      // Auto-execute if payments are ready
+      // DISABLED: Auto-execute if payments are ready
+      // Frontend auto-execution is disabled - payment-bot.js handles all executions
+      // This monitor is now display-only to show payment status
       if (readyPayments.length > 0 && roleData.remainingBalance > 0) {
-        // Prevent duplicate executions (min 10 seconds between executions)
-        if (now - lastExecutionRef.current < 10000) {
-          console.log('⏳ AUTO-PAYMENT: Cooldown period, waiting...');
-          return;
-        }
-
-        console.log(`🚀 AUTO-PAYMENT: ${readyPayments.length} payment(s) ready! Executing automatically...`);
-        executingRef.current = true;
-        lastExecutionRef.current = now;
-
-        try {
+        console.log(`ℹ️ ${readyPayments.length} payment(s) ready - payment-bot.js will execute them`);
+        
+        // Show notification that bot will handle it
+        if (now - lastExecutionRef.current > 60000) { // Only show once per minute
+          lastExecutionRef.current = now;
           showToast({
             type: 'info',
-            title: 'Auto-Payment Executing',
-            message: `Automatically executing ${readyPayments.length} payment(s)...`,
+            title: 'Payments Ready',
+            message: `${readyPayments.length} payment(s) ready. Payment bot will execute automatically.`,
             duration: 5000,
           });
-
-          await executePayments.mutateAsync();
-
-          showToast({
-            type: 'success',
-            title: 'Auto-Payment Success!',
-            message: `${readyPayments.length} payment(s) executed automatically!`,
-            duration: 8000,
-          });
-
-          console.log('✅ AUTO-PAYMENT: Execution successful!');
-        } catch (error) {
-          console.error('❌ AUTO-PAYMENT: Execution failed:', error);
-          showToast({
-            type: 'error',
-            title: 'Auto-Payment Failed',
-            message: `Failed to execute payments: ${(error as Error).message}`,
-            duration: 10000,
-          });
-        } finally {
-          executingRef.current = false;
         }
       } else if (readyPayments.length > 0 && roleData.remainingBalance <= 0) {
-        console.log('⚠️ AUTO-PAYMENT: Payments ready but insufficient balance!');
+        console.log('⚠️ Payments ready but insufficient balance!');
       }
     };
 
     // Initial check
     checkAndExecute();
 
-    // Check every 15 seconds for payments that are ready
+    // Check every 15 seconds for display updates only
     const interval = setInterval(checkAndExecute, 15000);
 
     return () => {
-      console.log('🛑 AUTO-PAYMENT MONITOR: Stopped');
+      console.log('🛑 PAYMENT MONITOR: Stopped');
       clearInterval(interval);
     };
   }, [account, isCreator, roleData, isActive, status.autoExecuteEnabled, executePayments]);
@@ -142,10 +117,10 @@ export const useAutoPaymentMonitor = (
 
     showToast({
       type: 'info',
-      title: status.autoExecuteEnabled ? 'Auto-Payments Disabled' : 'Auto-Payments Enabled',
+      title: status.autoExecuteEnabled ? 'Payment Monitor Disabled' : 'Payment Monitor Enabled',
       message: status.autoExecuteEnabled
-        ? 'Payments will no longer execute automatically'
-        : 'Payments will execute automatically when time arrives',
+        ? 'Payment status monitoring paused'
+        : 'Monitoring payments - payment-bot.js will execute automatically',
       duration: 5000,
     });
   };

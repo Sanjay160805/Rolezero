@@ -10,7 +10,11 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:move": "cd move && sui move test"
+    "test:move": "cd move && sui move test",
+    "bot:generate": "node generate-bot-wallet.js",
+    "bot:test": "node test-bot.js",
+    "bot:start": "node payment-bot.js",
+    "bot:help": "echo Read BOT-SETUP.md for full instructions"
   },
   "dependencies": {
     "@mysten/dapp-kit": "^0.14.26",

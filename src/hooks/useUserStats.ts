@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSuiClient, useCurrentAccount } from '@mysten/dapp-kit';
 import { SuiEvent } from '@mysten/sui/client';
+import { SUI_PACKAGE_ID } from '@/config/sui';
 
 interface FundingRequest {
   roleId: string;
@@ -50,11 +51,14 @@ export function useUserStats() {
 
   return useQuery({
     queryKey: ['dashboardData', 'all-users'],
+    enabled: !!client,
+    retry: 1,
+    staleTime: 60000,
     queryFn: async (): Promise<DashboardData> => {
       // Fetch all role creation events
       const createdEvents = await client.queryEvents({
         query: {
-          MoveEventType: `${import.meta.env.VITE_PACKAGE_ID}::role::RoleCreated`,
+          MoveEventType: `${SUI_PACKAGE_ID}::role::RoleCreated`,
         },
       });
 
