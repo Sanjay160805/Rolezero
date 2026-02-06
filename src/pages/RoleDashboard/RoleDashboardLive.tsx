@@ -6,6 +6,7 @@ import { useLiveTransactions } from '@/hooks/useLiveTransactions';
 import { useExtendExpiry } from '@/hooks/useExtendExpiry';
 import { useExecutePayments } from '@/hooks/useExecutePayments';
 import { useExecuteExpiry } from '@/hooks/useExecuteExpiry';
+import { useAutoPaymentMonitor } from '@/hooks/useAutoPaymentMonitor';
 import { showToast } from '@/components/Toast/Toast';
 import { AuditTrail } from '@/components/AuditTrail/AuditTrail';
 import { SkeletonDashboard } from '@/components/Skeleton/Skeleton';
@@ -26,7 +27,7 @@ import {
   Play
 } from 'lucide-react';
 import { shortenAddress } from '@/utils/ens';
-import { formatTokenAmount, getTokenIcon } from '@/utils/token';
+import { getTokenIcon } from '@/utils/token';
 import { Button as MovingBorderButton } from '@/components/ui/moving-border';
 import './RoleDashboardLive.css';
 
@@ -45,6 +46,20 @@ export const RoleDashboardLive: React.FC = () => {
   const [isExtending, setIsExtending] = useState(false);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
 
+  // Calculate isCreator and isActive BEFORE calling useAutoPaymentMonitor (must be before conditional returns)
+  const normalizeAddress = (addr: string) => addr?.toLowerCase().trim();
+  const connectedAddress = normalizeAddress(suiAccount?.address || '');
+  const creatorAddress = normalizeAddress(roleData?.creator || '');
+  const isCreator = connectedAddress === creatorAddress && !!roleData;
+  
+  const isExpired = roleData ? Date.now() > roleData.expiryTime : false;
+  const isActive = roleData ? Date.now() >= roleData.startTime && !isExpired : false;
+
+  // Auto-payment monitor - MUST be called before any conditional returns (Rules of Hooks)
+  const { status: autoStatus, toggleAutoExecute } = useAutoPaymentMonitor(roleData, isCreator, isActive);
+  const { autoExecuteEnabled, readyCount, nextPaymentTime, lastCheck, isMonitoring } = autoStatus;
+
+  // NOW safe to have conditional returns (all hooks called above)
   if (isLoading) {
     return <SkeletonDashboard />;
   }
@@ -66,9 +81,93 @@ export const RoleDashboardLive: React.FC = () => {
     );
   }
 
-  const isCreator = suiAccount?.address === roleData.creator;
-  const isExpired = Date.now() > roleData.expiryTime;
-  const isActive = Date.now() >= roleData.startTime && !isExpired;
+  // Debug logging for access control
+  console.log('🔐 ACCESS CONTROL CHECK:');
+  console.log('Connected Wallet:', suiAccount?.address);
+  console.log('Role Creator:', roleData.creator);
+  console.log('Normalized Connected:', connectedAddress);
+  console.log('Normalized Creator:', creatorAddress);
+  console.log('Is Creator?', isCreator);
+  console.log('Match Result:', connectedAddress === creatorAddress);
+
+  // ACCESS CONTROL: Only creator can view dashboard
+  // Sponsors should only see payment page, not dashboard
+  if (suiAccount && !isCreator) {
+    return (
+      <div className="container dashboard-error">
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%)',
+          border: '2px solid rgba(239, 68, 68, 0.5)',
+          borderRadius: '1.5rem',
+          padding: '3rem',
+          textAlign: 'center',
+          maxWidth: '600px',
+          margin: '0 auto'
+        }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            margin: '0 auto 1.5rem',
+            background: 'rgba(239, 68, 68, 0.2)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <AlertCircle size={50} style={{color: '#ef4444'}} />
+          </div>
+          
+          <h2 style={{fontSize: '1.75rem', marginBottom: '1rem', color: '#ef4444'}}>
+            Dashboard Access Not Allowed
+          </h2>
+          
+          <p style={{fontSize: '1.125rem', marginBottom: '0.5rem'}}>
+            This dashboard is only for the role creator.
+          </p>
+          
+          <p style={{fontSize: '0.875rem', opacity: 0.8, marginBottom: '1rem'}}>
+            As a sponsor, you can fund this role using the payment page.
+          </p>
+          
+          <details style={{marginBottom: '1.5rem', padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '0.5rem', textAlign: 'left', fontSize: '0.75rem', fontFamily: 'monospace'}}>
+            <summary style={{cursor: 'pointer', marginBottom: '0.5rem', fontWeight: 'bold'}}>🔍 Debug Info</summary>
+            <div style={{opacity: 0.9, wordBreak: 'break-all'}}>
+              <p><strong>Your Wallet:</strong> {suiAccount?.address}</p>
+              <p><strong>Creator Wallet:</strong> {roleData.creator}</p>
+              <p><strong>Match:</strong> <span style={{color: isCreator ? '#10b981' : '#ef4444', fontWeight: 'bold'}}>{isCreator ? '✅ YES (You are creator)' : '❌ NO (Different wallet)'}</span></p>
+            </div>
+          </details>
+          
+          <div style={{display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap'}}>
+            <MovingBorderButton
+              borderRadius="0.75rem"
+              onClick={() => navigate(`/sponsor/${roleId}`)}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+              containerClassName="h-12 w-48"
+            >
+              Go to Payment Page
+            </MovingBorderButton>
+            
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '2px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '0.75rem',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 600,
+              }}
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleExtendExpiry = async () => {
     if (!newExpiryDate) return;
@@ -320,21 +419,42 @@ export const RoleDashboardLive: React.FC = () => {
                 <p>No payments scheduled</p>
               </div>
             ) : (() => {
-              // Filter to show only unexecuted payments with better matching
+              // Filter to show only unexecuted payments that are still in the future
               const pendingPayments = roleData.payments.filter(payment => {
-                const isExecuted = roleData.executedPayments.some(
+                // Primary check: use on-chain executed flag if available
+                const isExecuted = payment.executed || roleData.executedPayments.some(
                   ep => ep.recipient.toLowerCase() === payment.recipient.toLowerCase() && 
                        Math.abs(ep.amount - payment.amount) < 100000 // More lenient matching (0.0001 SUI tolerance)
                 );
-                return !isExecuted; // Only show payments that haven't been executed
+                const isInFuture = Date.now() < payment.scheduledTime; // Only show future payments
+                return !isExecuted && isInFuture; // Only show payments that haven't been executed AND are still scheduled for the future
               });
 
               if (pendingPayments.length === 0) {
+                // Check if all payments have been executed
+                const allPaymentsExecuted = roleData.payments.length > 0 && roleData.payments.every(p => {
+                  return p.executed || roleData.executedPayments.some(
+                    ep => ep.recipient.toLowerCase() === p.recipient.toLowerCase() && 
+                         Math.abs(ep.amount - p.amount) < 100000
+                  );
+                });
+
+                if (allPaymentsExecuted) {
+                  return (
+                    <div className="empty-state">
+                      <CheckCircle size={48} style={{color: '#10b981'}} />
+                      <p style={{color: '#10b981', fontWeight: 600}}>All payments completed!</p>
+                      <p style={{fontSize: '0.875rem', opacity: 0.8}}>All scheduled payments have been executed.</p>
+                    </div>
+                  );
+                }
+
+                // Otherwise, all future scheduled payments are now ready or don't exist
                 return (
                   <div className="empty-state">
-                    <CheckCircle size={48} style={{color: '#10b981'}} />
-                    <p style={{color: '#10b981', fontWeight: 600}}>All payments completed!</p>
-                    <p style={{fontSize: '0.875rem', opacity: 0.8}}>All scheduled payments have been executed.</p>
+                    <Clock size={48} style={{color: '#f59e0b'}} />
+                    <p style={{color: '#f59e0b', fontWeight: 600}}>No upcoming payments</p>
+                    <p style={{fontSize: '0.875rem', opacity: 0.8}}>All scheduled payment times have arrived.</p>
                   </div>
                 );
               }
@@ -373,18 +493,20 @@ export const RoleDashboardLive: React.FC = () => {
           </div>
 
           {(() => {
-            // Check if there are any payments ready to execute (not yet executed, time has come, role is active)
-            const hasReadyPayments = roleData.payments.some(p => {
-              const isExecuted = roleData.executedPayments.some(
+            // Count payments ready to execute (using on-chain executed flag)
+            const readyToExecute = roleData.payments.filter(p => {
+              const isExecuted = p.executed || roleData.executedPayments.some(
                 ep => ep.recipient.toLowerCase() === p.recipient.toLowerCase() && 
-                     Math.abs(ep.amount - p.amount) < 100000 // More lenient matching
+                     Math.abs(ep.amount - p.amount) < 100000
               );
               return !isExecuted && Date.now() >= p.scheduledTime && isActive;
             });
+            
+            const hasReadyPayments = readyToExecute.length > 0;
 
             // Check if all scheduled payments have been executed
             const allPaymentsExecuted = roleData.payments.every(p => {
-              return roleData.executedPayments.some(
+              return p.executed || roleData.executedPayments.some(
                 ep => ep.recipient.toLowerCase() === p.recipient.toLowerCase() && 
                      Math.abs(ep.amount - p.amount) < 100000 // More lenient matching
               );
@@ -405,57 +527,302 @@ export const RoleDashboardLive: React.FC = () => {
               );
             }
 
-            // Show execute button only if there are ready payments
-            if (!hasReadyPayments) return null;
-
+            // Auto-Payment Monitor UI
             return (
-            <div className="ready-banner" style={{background: 'rgba(16, 185, 129, 0.15)', borderColor: 'rgb(16, 185, 129)', padding: '1rem'}}>
-              <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem'}}>
-                <CheckCircle size={16} />
-                <strong>Payments are ready to execute!</strong>
+            <div className="ready-banner" style={{
+              background: autoExecuteEnabled 
+                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%)'
+                : 'rgba(148, 163, 184, 0.15)', 
+              borderColor: autoExecuteEnabled ? '#10b981' : '#94a3b8',
+              padding: '1.5rem'
+            }}>
+              {/* Header with Toggle */}
+              <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
+                  {autoExecuteEnabled ? (
+                    <>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        background: 'rgba(16, 185, 129, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        🤖
+                      </div>
+                      <div>
+                        <h3 style={{margin: 0, color: '#10b981', fontSize: '1.25rem', fontWeight: 'bold'}}>
+                          Automatic Payments Active
+                        </h3>
+                        <p style={{margin: 0, fontSize: '0.875rem', opacity: 0.9}}>
+                          Monitoring every 15 seconds - payments execute when scheduled
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        background: 'rgba(148, 163, 184, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        ⏸️
+                      </div>
+                      <div>
+                        <h3 style={{margin: 0, color: '#94a3b8', fontSize: '1.25rem', fontWeight: 'bold'}}>
+                          Automatic Payments Paused
+                        </h3>
+                        <p style={{margin: 0, fontSize: '0.875rem', opacity: 0.9}}>
+                          Enable auto-execution to automatically send payments when ready
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                {/* Toggle Switch */}
+                <button
+                  onClick={toggleAutoExecute}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '0.75rem',
+                    border: '2px solid',
+                    borderColor: autoExecuteEnabled ? '#10b981' : '#94a3b8',
+                    background: autoExecuteEnabled 
+                      ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%)'
+                      : 'rgba(148, 163, 184, 0.1)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '0.875rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {autoExecuteEnabled ? '⏸️ Pause' : '▶️ Enable'} Auto-Execute
+                </button>
               </div>
-              <p style={{fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.75rem'}}>
-                💡 <strong>How it works:</strong> Clicking "Execute Payments" triggers the smart contract to send funds from the role balance to recipients. 
-                <strong>YOU WILL PAY A GAS FEE (~0.001-0.01 SUI) from your wallet.</strong> The payment amounts come from the role's funded balance.
-              </p>
-              <p style={{fontSize: '0.875rem', opacity: 0.85, marginBottom: roleData.remainingBalance <= 0 ? '0.5rem' : '1rem'}}>
-                📊 <strong>Current Role Balance:</strong> {(roleData.remainingBalance / 1_000_000_000).toFixed(4)} SUI
-              </p>
-              {roleData.remainingBalance <= 0 && (
-                <div style={{background: 'rgba(239, 68, 68, 0.2)', border: '2px solid rgba(239, 68, 68, 0.5)', borderRadius: '0.5rem', padding: '0.75rem', marginBottom: '1rem'}}>
-                  <AlertCircle size={16} style={{display: 'inline', marginRight: '0.5rem', color: '#ef4444'}} />
-                  <strong style={{color: '#ef4444'}}>⚠️ INSUFFICIENT BALANCE!</strong>
-                  <p style={{fontSize: '0.875rem', marginTop: '0.5rem'}}>Role balance is ZERO. Please fund the role before executing payments.</p>
+
+              {/* Status Information */}
+              <div style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                borderRadius: '0.75rem',
+                padding: '1rem',
+                marginBottom: '1rem'
+              }}>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem'}}>
+                  {/* Ready Payments Count */}
+                  <div>
+                    <div style={{fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem'}}>Ready to Execute</div>
+                    <div style={{fontSize: '1.5rem', fontWeight: 'bold', color: readyCount > 0 ? '#10b981' : '#94a3b8'}}>
+                      {readyCount} payment{readyCount !== 1 ? 's' : ''}
+                    </div>
+                  </div>
+
+                  {/* Next Payment Time */}
+                  {nextPaymentTime && (
+                    <div>
+                      <div style={{fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem'}}>Next Payment In</div>
+                      <div style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#fbbf24'}}>
+                        {(() => {
+                          const diff = nextPaymentTime - Date.now();
+                          if (diff <= 0) return 'Ready now!';
+                          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                          if (days > 0) return `${days}d ${hours}h`;
+                          if (hours > 0) return `${hours}h ${minutes}m`;
+                          return `${minutes}m`;
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Last Check Time */}
+                  {lastCheck && (
+                    <div>
+                      <div style={{fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem'}}>Last Checked</div>
+                      <div style={{fontSize: '1rem', fontWeight: '600', color: '#a78bfa'}}>
+                        {format(lastCheck, 'HH:mm:ss')}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Monitoring Status */}
+                  {autoExecuteEnabled && (
+                    <div>
+                      <div style={{fontSize: '0.75rem', opacity: 0.7, marginBottom: '0.25rem'}}>Status</div>
+                      <div style={{fontSize: '1rem', fontWeight: '600', color: isMonitoring ? '#10b981' : '#94a3b8'}}>
+                        {isMonitoring ? '🟢 Monitoring...' : '⚪ Idle'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* How it Works Info */}
+              {autoExecuteEnabled && (
+                <div style={{
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  borderRadius: '0.5rem',
+                  padding: '0.75rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.875rem'
+                }}>
+                  <div style={{display: 'flex', alignItems: 'start', gap: '0.5rem'}}>
+                    <span style={{fontSize: '1.25rem'}}>💡</span>
+                    <div>
+                      <strong>How Auto-Payments Work:</strong> The system checks every 15 seconds for ready payments. 
+                      When a payment's scheduled time arrives, it's <strong>automatically executed</strong>. 
+                      <strong>YOU WILL PAY GAS FEES (~0.001-0.01 SUI)</strong> from your wallet for each execution. 
+                      Payment amounts come from the role's funded balance.
+                    </div>
+                  </div>
                 </div>
               )}
-              <MovingBorderButton
-                borderRadius="0.75rem"
-                onClick={() => executePayments.mutate()}
-                disabled={executePayments.isPending || roleData.remainingBalance <= 0}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white"
-                containerClassName="h-10 w-48"
-              >
-                {executePayments.isPending ? (
-                  <>
-                    <Loader2 className="spin mr-2" size={16} />
-                    Executing...
-                  </>
-                ) : roleData.remainingBalance <= 0 ? (
-                  <>
-                    <XCircle size={16} className="mr-2" />
-                    Insufficient Balance
-                  </>
-                ) : (
-                  <>
-                    <Play size={16} className="mr-2" />
-                    Execute Payments
-                  </>
-                )}
-              </MovingBorderButton>
+
+              {/* Balance Warning */}
+              {roleData.remainingBalance <= 0 && (
+                <div style={{
+                  background: 'rgba(239, 68, 68, 0.2)', 
+                  border: '2px solid rgba(239, 68, 68, 0.5)', 
+                  borderRadius: '0.5rem', 
+                  padding: '0.75rem', 
+                  marginBottom: '1rem'
+                }}>
+                  <AlertCircle size={16} style={{display: 'inline', marginRight: '0.5rem', color: '#ef4444'}} />
+                  <strong style={{color: '#ef4444'}}>⚠️ INSUFFICIENT BALANCE!</strong>
+                  <p style={{fontSize: '0.875rem', marginTop: '0.5rem'}}>
+                    Role balance is ZERO. Please fund the role before payments can be executed.
+                  </p>
+                </div>
+              )}
+
+              {/* Manual Execute Option (Backup) */}
+              {hasReadyPayments && !autoExecuteEnabled && (
+                <div style={{marginTop: '1rem'}}>
+                  <p style={{fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.75rem'}}>
+                    <strong>{readyToExecute.length} payment{readyToExecute.length > 1 ? 's' : ''} ready now.</strong> 
+                    {' '}Enable auto-execute above, or manually execute below:
+                  </p>
+                  <MovingBorderButton
+                    borderRadius="0.75rem"
+                    onClick={() => executePayments.mutate()}
+                    disabled={executePayments.isPending || roleData.remainingBalance <= 0}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                    containerClassName="h-10 w-56"
+                  >
+                    {executePayments.isPending ? (
+                      <>
+                        <Loader2 className="spin mr-2" size={16} />
+                        Executing...
+                      </>
+                    ) : (
+                      <>
+                        <Play size={16} className="mr-2" />
+                        Manual Execute ({readyToExecute.length})
+                      </>
+                    )}
+                  </MovingBorderButton>
+                  {executePayments.isPending && (
+                    <p style={{fontSize: '0.875rem', color: '#fbbf24', marginTop: '0.75rem', fontWeight: 600}}>
+                      ⏳ Processing transaction... This will take a few seconds.
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {/* Debug: Show ready payments */}
+              {showDebugInfo && (
+                <details style={{marginTop: '1rem', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', borderRadius: '0.5rem', fontSize: '0.75rem'}}>
+                  <summary style={{cursor: 'pointer', fontWeight: 'bold', marginBottom: '0.5rem'}}>🔍 Debug: Ready Payments</summary>
+                  {roleData.payments.map((p, i) => {
+                    const isExecuted = p.executed || roleData.executedPayments.some(
+                      ep => ep.recipient.toLowerCase() === p.recipient.toLowerCase() && 
+                           Math.abs(ep.amount - p.amount) < 100000
+                    );
+                    const isReady = Date.now() >= p.scheduledTime;
+                    return (
+                      <div key={i} style={{marginBottom: '0.5rem', padding: '0.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '0.25rem'}}>
+                        <div>Payment #{i + 1}: {(p.amount / 1_000_000_000).toFixed(4)} SUI → {shortenAddress(p.recipient, 8)}</div>
+                        <div style={{fontSize: '0.7rem', marginTop: '0.25rem'}}>
+                          • Scheduled: {format(p.scheduledTime, 'MMM d, HH:mm:ss')}<br/>
+                          • Time Ready: <strong style={{color: isReady ? '#10b981' : '#ef4444'}}>{isReady ? '✅ YES' : '❌ NO'}</strong><br/>
+                          • On-chain Executed: <strong style={{color: p.executed ? '#10b981' : '#94a3b8'}}>{p.executed ? '✅ YES' : '➖ N/A'}</strong><br/>
+                          • Executed (Event): <strong style={{color: isExecuted ? '#10b981' : '#ef4444'}}>{isExecuted ? '✅ YES' : '❌ NO'}</strong><br/>
+                          • Can Execute: <strong style={{color: !isExecuted && isReady ? '#10b981' : '#ef4444'}}>
+                            {!isExecuted && isReady ? '✅ YES' : '❌ NO'}
+                          </strong>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </details>
+              )}
             </div>
             );
           })()}
         </div>
+
+        {/* Completed Payments Section */}
+        {roleData.executedPayments.length > 0 && (
+          <div className="card completed-payments-card">
+            <div className="card-header">
+              <h3>
+                <CheckCircle size={20} style={{color: '#10b981'}} />
+                Completed Payments
+              </h3>
+              <span className="badge" style={{background: '#10b981', color: 'white', fontSize: '0.75rem', padding: '0.25rem 0.75rem', borderRadius: '1rem'}}>
+                {roleData.executedPayments.length} Executed
+              </span>
+            </div>
+
+            <div className="payments-list">
+              {roleData.executedPayments.map((payment, index) => {
+                const executedDate = new Date(payment.timestamp);
+                
+                return (
+                  <div key={index} className="payment-item" style={{background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)'}}>
+                    <div className="payment-info">
+                      <div className="payment-recipient">
+                        <CheckCircle size={16} style={{color: '#10b981'}} />
+                        {shortenAddress(payment.recipient)}
+                      </div>
+                      <div className="payment-time">
+                        ✅ Executed: {format(executedDate, 'MMM d, yyyy HH:mm:ss')}
+                      </div>
+                    </div>
+                    
+                    <div className="payment-amount" style={{color: '#10b981'}}>
+                      {(payment.amount / 1_000_000_000).toFixed(4)} SUI
+                    </div>
+
+                    <div className="payment-status">
+                      <a
+                        href={`https://suiscan.xyz/testnet/tx/${payment.txDigest}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="badge badge-ready"
+                        style={{background: '#10b981', color: 'white', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.25rem'}}
+                      >
+                        View TX <ExternalLink size={12} />
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Live Transaction Feed */}
         <div className="card live-transactions-card">
@@ -671,7 +1038,7 @@ export const RoleDashboardLive: React.FC = () => {
         <AlertCircle size={20} />
         <div>
           <strong>Secure & Live:</strong> All transactions are verified on the Sui blockchain. 
-          Data updates every 5 seconds. Only the role creator can extend expiry time.
+          Data updates every 3 seconds for real-time monitoring. Sponsor payments appear instantly.
         </div>
         <button 
           onClick={() => setShowDebugInfo(!showDebugInfo)}

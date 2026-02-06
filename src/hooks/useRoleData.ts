@@ -86,7 +86,7 @@ export const useRoleData = (roleId: string | undefined) => {
 
       // Parse payments with proper timestamp handling
       const payments = (fields.payments || []).map((p: any) => {
-        // Blockchain returns nested structure: p.fields.{amount, recipient, scheduled_time}
+        // Blockchain returns nested structure: p.fields.{amount, recipient, scheduled_time, executed}
         const paymentFields = p.fields || p;
         
         // Handle scheduled_time - it might be a string or number
@@ -100,17 +100,21 @@ export const useRoleData = (roleId: string | undefined) => {
         // Handle amount
         const amount = typeof paymentFields.amount === 'string' ? parseInt(paymentFields.amount) : (paymentFields.amount || 0);
         
+        // Handle executed flag
+        const executed = paymentFields.executed === true || paymentFields.executed === 'true';
+        
         return {
           recipient: paymentFields.recipient,
           amount,
           scheduledTime,
+          executed, // NEW: Track if payment was already executed on-chain
         };
       });
 
       const roleData: RoleData = {
         id: roleId,
         name: fields.name || 'Unknown Role',
-        creator: fields.creator || '',
+        creator: fields.owner || '', // Move contract uses 'owner' field, not 'creator'
         startTime: parseInt(fields.start_time) || 0,
         expiryTime: parseInt(fields.expiry_time) || 0,
         payments,

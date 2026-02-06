@@ -23,6 +23,18 @@ export const SponsorPayment: React.FC = () => {
   const [waitingForWallet, setWaitingForWallet] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successAmount, setSuccessAmount] = useState('');
+  const [hasPaidBefore, setHasPaidBefore] = useState(false);
+
+  // Check if sponsor has already paid for this role
+  React.useEffect(() => {
+    if (account && roleId) {
+      const paymentKey = `sponsor-payment-${roleId}-${account.address}`;
+      const hasCompleted = localStorage.getItem(paymentKey);
+      if (hasCompleted) {
+        setHasPaidBefore(true);
+      }
+    }
+  }, [account, roleId]);
 
   // Auto-execute payment when wallet connects
   React.useEffect(() => {
@@ -68,15 +80,27 @@ export const SponsorPayment: React.FC = () => {
       setSuccessAmount(amount);
       setShowSuccessModal(true); // Show modal
       
+      // Store payment completion in localStorage to prevent re-showing payment page
+      if (account) {
+        const paymentKey = `sponsor-payment-${roleId}-${account.address}`;
+        const paymentData = JSON.stringify({
+          timestamp: Date.now(),
+          amount: amountNum,
+          txDigest: result.digest,
+        });
+        localStorage.setItem(paymentKey, paymentData);
+        console.log('💾 Payment recorded for sponsor:', account.address);
+      }
+      
       // Invalidate all role-related queries to update the developer's dashboard
       console.log('🔄 Invalidating queries to update dashboard...');
       await queryClient.invalidateQueries({ queryKey: ['role', roleId] });
       await queryClient.invalidateQueries({ queryKey: ['role-live-transactions', roleId] });
       await queryClient.invalidateQueries({ queryKey: ['allRoles'] });
-      // Refetch immediately to ensure fresh data
+      // Refetch immediately to ensure fresh data (this will trigger real-time update on developer's dashboard)
       await queryClient.refetchQueries({ queryKey: ['role', roleId] });
       await queryClient.refetchQueries({ queryKey: ['role-live-transactions', roleId] });
-      console.log('✅ Dashboard data updated!');
+      console.log('✅ Dashboard data updated! Developer will see this transaction in real-time.');
       
       setAmount(''); // Clear input
       showToast({
@@ -86,6 +110,11 @@ export const SponsorPayment: React.FC = () => {
         txDigest: result.digest,
         duration: 10000,
       });
+
+      // Auto-redirect after 3 seconds
+      setTimeout(() => {
+        navigate('/');
+      }, 3000);
     } catch (error) {
       console.error('❌ Payment failed:', error);
       showToast({
@@ -204,7 +233,8 @@ export const SponsorPayment: React.FC = () => {
           color: 'var(--text-secondary)',
           marginBottom: '1.5rem'
         }}>
-          Transaction confirmed on Sui blockchain
+          Transaction confirmed on Sui blockchain<br />
+          <span style={{color: '#10b981', fontWeight: 600}}>Redirecting to home in 3 seconds...</span>
         </p>
 
         <div style={{
@@ -227,44 +257,19 @@ export const SponsorPayment: React.FC = () => {
           </code>
         </div>
 
+        <p style={{
+          fontSize: '0.875rem',
+          color: 'var(--text-secondary)',
+          marginBottom: '1rem',
+          padding: '1rem',
+          background: 'rgba(16, 185, 129, 0.1)',
+          borderRadius: '0.5rem',
+          border: '1px solid rgba(16, 185, 129, 0.2)'
+        }}>
+          ✨ Thank you for your support! The developer will see your contribution in their dashboard.
+        </p>
+
         <div style={{display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap'}}>
-          <MovingBorderButton
-            onClick={() => {
-              setShowSuccessModal(false);
-              navigate(`/role/${roleId}/live`);
-            }}
-            borderRadius="0.75rem"
-            className="btn btn-primary"
-            containerClassName="h-12"
-          >
-            View Dashboard
-          </MovingBorderButton>
-
-          <button
-            onClick={() => setShowSuccessModal(false)}
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '2px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '0.75rem',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 600,
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-            }}
-          >
-            Fund More
-          </button>
-
           <a
             href={`https://suiscan.xyz/testnet/tx/${txSuccess}`}
             target="_blank"
@@ -378,17 +383,154 @@ export const SponsorPayment: React.FC = () => {
     </div>
   ) : null;
 
+  // REQUIRE WALLET CONNECTION for sponsor page to identify sponsor
+  if (!account && !txSuccess) {
+    return (
+      <div className="container sponsor-page">
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%)',
+          border: '2px solid rgba(251, 191, 36, 0.5)',
+          borderRadius: '1.5rem',
+          padding: '3rem',
+          textAlign: 'center',
+          maxWidth: '600px',
+          margin: '2rem auto'
+        }}>
+          <div style={{
+            width: '100px',
+            height: '100px',
+            margin: '0 auto 1.5rem',
+            background: 'rgba(251, 191, 36, 0.2)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Wallet size={60} style={{color: '#fbbf24'}} />
+          </div>
+          
+          <h1 style={{fontSize: '2rem', marginBottom: '1rem', color: '#fbbf24', fontWeight: 'bold'}}>
+            Connect Your Wallet First
+          </h1>
+          
+          <p style={{fontSize: '1.125rem', marginBottom: '0.5rem'}}>
+            Please connect your Sui wallet to sponsor this role.
+          </p>
+          
+          <p style={{fontSize: '0.875rem', opacity: 0.8, marginBottom: '2rem'}}>
+            Click "Connect Wallet" in the top-right corner to get started. This helps us identify you as a sponsor and track your contributions.
+          </p>
+          
+          <div style={{display: 'flex', gap: '1rem', justifyContent: 'center'}}>
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                padding: '0.75rem 2rem',
+                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                border: 'none',
+                borderRadius: '0.75rem',
+                color: '#1e293b',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 700,
+              }}
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container sponsor-page">
       {SuccessModal}
       
+      {/* Thank You Message for Sponsors Who Already Paid */}
+      {hasPaidBefore && !showSuccessModal && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%)',
+          border: '2px solid rgba(16, 185, 129, 0.5)',
+          borderRadius: '1.5rem',
+          padding: '3rem',
+          marginBottom: '2rem',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            width: '100px',
+            height: '100px',
+            margin: '0 auto 1.5rem',
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 10px 40px rgba(16, 185, 129, 0.4)'
+          }}>
+            <CheckCircle size={60} style={{color: 'white'}} strokeWidth={3} />
+          </div>
+          
+          <h2 style={{
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            color: '#10b981',
+            marginBottom: '1rem'
+          }}>
+            Thank You for Your Support! 🎉
+          </h2>
+          
+          <p style={{
+            fontSize: '1.125rem',
+            marginBottom: '0.5rem',
+            color: 'var(--text-primary)'
+          }}>
+            You've already contributed to this role.
+          </p>
+          
+          <p style={{
+            fontSize: '0.875rem',
+            color: 'var(--text-secondary)',
+            marginBottom: '1.5rem'
+          }}>
+            Your payment has been recorded and the developer has been notified. You can add more funds below if you'd like to contribute further.
+          </p>
+          
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              padding: '0.75rem 2rem',
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              border: 'none',
+              borderRadius: '0.75rem',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: 600,
+              transition: 'all 0.2s',
+              boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+            }}
+          >
+            Return Home
+          </button>
+        </div>
+      )}
+      
       <div className="page-header">
         <MovingBorderButton
-          onClick={() => navigate(`/role/${roleId}/live`)}
+          onClick={() => navigate('/')}
           borderRadius="0.75rem"
           className="btn btn-secondary"
         >
-          ← Back to Dashboard
+          ← Back to Home
         </MovingBorderButton>
       </div>
 

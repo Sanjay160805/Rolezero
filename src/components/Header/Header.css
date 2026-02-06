@@ -1,43 +1,58 @@
+/* ==================== ENS-STYLE HEADER ==================== */
+
 .header {
-  border-bottom: 1px solid var(--border);
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .header-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
+  padding: 1.25rem 2rem;
   gap: 2rem;
 }
 
-.logo {  display: flex;
+/* ==================== LOGO ==================== */
+
+.logo {
+  display: flex;
   align-items: center;
   gap: 0.75rem;
   text-decoration: none;
   color: var(--text-primary);
-  font-weight: 600;
-  font-size: 1.25rem;
+  font-weight: 700;
+  font-size: 1.5rem;
   overflow: visible;
+  transition: all 0.2s ease;
 }
 
 .logo-icon {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+}
+
+.logo-text {
+  font-family: 'Inter', 'Satoshi', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 .logo:hover {
-  color: var(--text-primary);
-  opacity: 0.8;
+  color: var(--ens-primary);
+  transform: translateY(-1px);
 }
+
+/* ==================== NAVIGATION ==================== */
 
 .nav {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 2.5rem;
   flex: 1;
   overflow: visible;
 }
@@ -45,21 +60,69 @@
 .nav-link {
   text-decoration: none;
   color: var(--text-secondary);
-  font-weight: 500;
-  transition: color 0.2s;
-  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-size: 1rem;
   overflow: visible;
   display: inline-block;
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--ens-primary);
+  transition: width 0.3s ease;
 }
 
 .nav-link:hover {
   color: var(--text-primary);
 }
 
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.nav-link-dropdown {
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 1rem;
+ font-family: 'Inter', sans-serif;
+}
+
+.nav-link-dropdown:hover {
+  color: var(--text-primary);
+}
+
+/* ==================== DROPDOWN ==================== */
+
+.template-dropdown {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== HEADER ACTIONS ==================== */
+
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .connect-wallet-btn {
@@ -75,38 +138,54 @@
 }
 
 .btn-icon {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  transition: all 0.2s;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  color: var(--text-primary);
 }
 
 .btn-icon:hover {
-  background: var(--bg-surface);
-  border-color: var(--text-tertiary);
+  background: var(--bg-glass-hover);
+  border-color: var(--ens-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
+
+/* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 768px) {
   .header-container {
     flex-wrap: wrap;
     gap: 1rem;
+    padding: 1rem;
   }
 
   .nav {
     order: 3;
     width: 100%;
     flex: unset;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-light);
     padding-top: 1rem;
+    gap: 1.5rem;
   }
 
   .header-actions {
     flex-wrap: wrap;
   }
+
+  .logo {
+    font-size: 1.25rem;
+  }
+
+  .logo-icon {
+    font-size: 1.5rem;
+  }
 }
+

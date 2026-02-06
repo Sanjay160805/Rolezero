@@ -14,11 +14,8 @@ export const RolesList: React.FC = () => {
   const suiAccount = useCurrentAccount();
   const { data: allRoles, isLoading, error } = useAllRoles();
 
-  // Filter roles to show only those created by the current user
-  const roles = React.useMemo(() => {
-    if (!suiAccount?.address || !allRoles) return [];
-    return allRoles.filter(role => role.creator === suiAccount.address);
-  }, [allRoles, suiAccount?.address]);
+  // Show all roles (developer has full access)
+  const roles = allRoles || [];
 
   if (isLoading) {
     return <SkeletonRolesList />;
@@ -29,15 +26,6 @@ export const RolesList: React.FC = () => {
       <div className="container roles-list-error">
         <h2>Error Loading Roles</h2>
         <p>{error.message}</p>
-      </div>
-    );
-  }
-
-  if (!suiAccount) {
-    return (
-      <div className="container roles-list-error">
-        <h2>Connect Wallet</h2>
-        <p>Please connect your Sui wallet to view your roles</p>
       </div>
     );
   }
@@ -57,8 +45,8 @@ export const RolesList: React.FC = () => {
     <div className="container roles-list-page">
       <div className="roles-list-header">
         <div>
-          <h1>My Roles</h1>
-          <p>View and manage your payment roles</p>
+          <h1>All Roles</h1>
+          <p>View and manage all payment roles</p>
         </div>
         <MovingBorderButton
           onClick={() => navigate('/create')}
@@ -71,8 +59,8 @@ export const RolesList: React.FC = () => {
 
       {!roles || roles.length === 0 ? (
         <div className="empty-state card">
-          <h2>No Roles Yet</h2>
-          <p>Create your first payment role to get started</p>
+          <h2>No Roles Found</h2>
+          <p>There are no payment roles yet. Create the first one!</p>
           <MovingBorderButton
             onClick={() => navigate('/create')}
             borderRadius="0.75rem"

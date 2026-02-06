@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useCreateRole } from '@/hooks/useCreateRole';
 import { useResolveEnsName } from '@/hooks/useResolveEnsName';
@@ -21,10 +21,43 @@ interface PaymentInput {
   token?: 'SUI' | 'USDC';
 }
 
+// Template configurations
+const ROLE_TEMPLATES = {
+  salary: {
+    name: 'Monthly Salary',
+    description: '6 monthly payments',
+    payments: 6,
+    intervalDays: 30,
+    amount: '1',
+  },
+  subscription: {
+    name: 'Subscription',
+    description: '12 monthly recurring payments',
+    payments: 12,
+    intervalDays: 30,
+    amount: '0.5',
+  },
+  freelance: {
+    name: 'Freelance Project',
+    description: '3 milestone payments',
+    payments: 3,
+    intervalDays: 14,
+    amount: '2',
+  },
+  allowance: {
+    name: 'Weekly Allowance',
+    description: '4 weekly payments',
+    payments: 4,
+    intervalDays: 7,
+    amount: '0.25',
+  },
+};
+
 export const CreateRole: React.FC = () => {
   const navigate = useNavigate();
   const account = useCurrentAccount();
   const { createRole } = useCreateRole();
+  const [searchParams] = useSearchParams();
 
   const [roleName, setRoleName] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -38,6 +71,48 @@ export const CreateRole: React.FC = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [txResult, setTxResult] = useState<{ digest: string; roleId: string | null } | null>(null);
+
+  // Load template from URL parameter
+  useEffect(() => {
+    const templateParam = searchParams.get('template');
+    if (templateParam && templateParam in ROLE_TEMPLATES) {
+      const template = ROLE_TEMPLATES[templateParam as keyof typeof ROLE_TEMPLATES];
+      
+      // Set role name
+      setRoleName(template.name);
+
+      // Set start time to now
+      const now = new Date();
+      const startTimeStr = new Date(now.getTime() + 5 * 60000).toISOString().slice(0, 16); // Start in 5 minutes
+      setStartTime(startTimeStr);
+
+      // Calculate expiry (last payment + 30 days buffer)
+      const expiryDate = new Date(now.getTime() + (template.intervalDays * template.payments + 30) * 24 * 60 * 60 * 1000);
+      setExpiryTime(expiryDate.toISOString().slice(0, 16));
+
+      // Generate payment schedule
+      const generatedPayments: PaymentInput[] = [];
+      for (let i = 0; i < template.payments; i++) {
+        const scheduledDate = new Date(now.getTime() + (i * template.intervalDays * 24 * 60 * 60 * 1000));
+        generatedPayments.push({
+          id: Date.now() + i,
+          recipient: '',
+          amount: template.amount,
+          scheduledTime: scheduledDate.toISOString().slice(0, 16),
+          token: 'SUI',
+        });
+      }
+      setPayments(generatedPayments);
+
+      // Show success toast
+      showToast({
+        type: 'success',
+        title: '✨ Template Loaded!',
+        message: `${template.name} template with ${template.payments} payments loaded. Customize as needed.`,
+        duration: 5000,
+      });
+    }
+  }, [searchParams]);
 
   // ENS resolution for leftover recipient
   const leftoverEns = useResolveEnsName(leftoverRecipient);
@@ -357,6 +432,61 @@ export const CreateRole: React.FC = () => {
     <div className="container create-role-page">
       <h1>Create New Role</h1>
       <p className="subtitle">Set up an autonomous payment role on Sui blockchain</p>
+
+      {/* Template Indicator Banner */}
+      {(() => {
+        const template = searchParams.get('template');
+        return template && template in ROLE_TEMPLATES && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
+            border: '2px solid rgba(168, 85, 247, 0.5)',
+            borderRadius: '1rem',
+            padding: '1.5rem',
+            marginBottom: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem'
+          }}>
+            <div style={{
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              background: 'rgba(168, 85, 247, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem'
+            }}>
+              ✨
+            </div>
+            <div style={{flex: 1}}>
+              <h3 style={{margin: 0, marginBottom: '0.25rem', color: '#a78bfa', fontSize: '1.25rem'}}>
+                Template Loaded: {ROLE_TEMPLATES[template as keyof typeof ROLE_TEMPLATES].name}
+              </h3>
+              <p style={{margin: 0, fontSize: '0.875rem', opacity: 0.9}}>
+                Pre-configured with {ROLE_TEMPLATES[template as keyof typeof ROLE_TEMPLATES].description}. 
+                Customize recipients, amounts, and schedules as needed.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/create')}
+              style={{
+                padding: '0.5rem 1rem',
+                background: 'rgba(168, 85, 247, 0.2)',
+                border: '1px solid rgba(168, 85, 247, 0.5)',
+                borderRadius: '0.5rem',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              Start Fresh
+            </button>
+          </div>
+        );
+      })()}
 
       <form onSubmit={handleSubmit} className="create-role-form">
         <div className="card">

@@ -2,6 +2,7 @@ export interface Payment {
   recipient: string;
   amount: number;
   scheduledTime: number;
+  executed?: boolean; // Track if payment was executed on-chain
   ensName?: string;
   token?: 'SUI' | 'USDC'; // Payment token type
 }

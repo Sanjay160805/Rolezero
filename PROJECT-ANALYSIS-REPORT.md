@@ -48,7 +48,7 @@ Unlike traditional payment systems, this platform uses **blockchain smart contra
 
 #### **Additional Features:**
 - **ENS Integration:** Resolve Ethereum Name Service names
-- **Cross-Chain:** LI.FI bridge support (planned)
+- **Cross-Chain:** LI.FI bridge support (planned)  
 - **Automation:** Node.js bot for automatic payment execution
 
 ---
